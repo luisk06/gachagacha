@@ -364,7 +364,29 @@
 
   // ================= Sound (Web Audio, all synthesized) =================
   const Sfx = (() => {
-    let ctx, master, noiseBuf, muted = false;
+    let ctx, master, noiseBuf, muted = false, silentEl = null;
+    // iPhone: Web Audio obeys the ring/silent switch unless the page's audio session is "playback".
+    // Newer iOS exposes navigator.audioSession; older iOS only switches while an <audio> element is playing.
+    function silentWavUrl() {
+      const n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+      const w = (o, str) => { for (let i = 0; i < str.length; i++) b[o + i] = str.charCodeAt(i); };
+      w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt ');
+      v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+      w(36, 'data'); v.setUint32(40, n, true); b.fill(128, 44);
+      return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+    }
+    function primeSession() {
+      try { if (navigator.audioSession) { navigator.audioSession.type = 'playback'; return; } } catch (e) {}
+      try {
+        if (!silentEl) {
+          silentEl = new Audio(silentWavUrl());
+          silentEl.loop = true; silentEl.setAttribute('playsinline', '');
+          document.addEventListener('visibilitychange', () => { if (document.hidden) silentEl.pause(); });
+        }
+        if (silentEl.paused) silentEl.play().catch(() => {});
+      } catch (e) {}
+    }
     function ac() {
       if (!ctx) {
         ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -372,7 +394,8 @@
         const comp = ctx.createDynamicsCompressor();
         master.connect(comp).connect(ctx.destination);
       }
-      if (ctx.state === 'suspended') ctx.resume();
+      if (!muted) primeSession();
+      if (ctx.state !== 'running') ctx.resume();
       return ctx;
     }
     function tone({ freq = 440, to = null, type = 'sine', dur = 0.15, vol = 0.3, delay = 0, attack = 0.005 }) {
@@ -404,7 +427,7 @@
     }
     return {
       unlock: ac,
-      setMuted(m) { muted = m; },
+      setMuted(m) { muted = m; if (m && silentEl) silentEl.pause(); },
       coin() {
         tone({ freq: 2093, dur: 0.3, vol: 0.22 }); tone({ freq: 3136, dur: 0.4, vol: 0.12, delay: 0.03 });
         for (let i = 0; i < 4; i++) noise({ dur: 0.03, vol: 0.22 - i * 0.04, freq: 3800, q: 4, delay: 0.22 + i * 0.07 + Math.random() * 0.02 });
@@ -922,6 +945,8 @@
   }
 
   // ================= Wiring =================
+  // Any touch (re)wakes audio — iOS suspends it after app switches or screen lock.
+  ['pointerdown', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (!stats.muted) Sfx.unlock(); }, { passive: true }));
   coinBtn.addEventListener('click', insertCoin);
   outCap.addEventListener('click', openReveal);
   bigCap.addEventListener('pointerdown', e => { e.preventDefault(); tapCap(); });
