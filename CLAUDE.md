@@ -11,9 +11,16 @@ A single-page gachapon (capsule toy) game. Prizes are 200円, 300円, 400円 or 
 - **All UI text is in Japanese**, using the words Japanese gacha players and capsule-toy machines actually use, not literal translations (see Terminology).
 - Prices and prizes are written as `500円`, never `¥500`.
 
+## Layout (user requirement)
+- **The main screen never scrolls.** `.app` is exactly `100dvh`. From top to bottom it shows: header (title, 📊 記録 button, mute), the machine, the hint, and the 「コインを入れる」 button, which must be the **bottommost** element.
+- The machine has a fixed design size (320px wide) and is scaled to fit by `fitMachine()`, which sets the CSS variable `--k` (between 0.3 and 1.6) and reruns through a ResizeObserver. Don't give the machine a fluid width; change `--k` instead.
+- On short landscape screens (`max-height:520px`), `.controls` (hint + button) sit beside the machine.
+- **Everything else lives on a second screen**, `#records` (獲得金額, 景品と排出率, ガチャ履歴, リセット). It slides up when you press 📊 記録 and closes with とじる or Esc. This screen may scroll.
+- Collecting a prize shows a floating `+N円` on the 記録 button, so you get feedback without opening the records screen.
+
 ## Structure of `index.html`
 - `<style>`: palette tokens on `:root` (`--ink`, `--red`, `--yellow`…), followed by the machine, capsule, sidebar and reveal-overlay styles. Font: M PLUS Rounded 1c from Google Fonts.
-- Markup: the machine (dome, collar, body with marquee, 投入口 coin slot, crank, prize panel, chute), the coin button, the sidebar cards, the reveal overlay, `#flash` and the `#fx` canvas.
+- Markup: `.app` (header, `.stage-wrap` > machine, `.controls` with the hint and coin button), then the `#records` screen, the reveal overlay, `#flash` and the `#fx` canvas.
 - Script (one IIFE), in order:
   - `TIERS`: prize table (yen, rank, Japanese label, color, weight)
   - `Sfx`: every sound, synthesized with the Web Audio API (no audio files)

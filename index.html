@@ -20,29 +20,48 @@
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
-  html,body{margin:0;min-height:100%}
+  html,body{margin:0;height:100%}
   body{
     font-family:'M PLUS Rounded 1c',system-ui,sans-serif;
     color:var(--ink);
     background-color:var(--bg);
     background-image:radial-gradient(var(--dot) 1.5px,transparent 1.6px);
     background-size:22px 22px;
-    overflow-x:hidden;
+    overflow:hidden;
+    overscroll-behavior:none;
     -webkit-tap-highlight-color:transparent;
     user-select:none;
   }
   button{font:inherit;color:inherit}
 
-  .app{max-width:980px;margin:0 auto;padding:16px 16px 40px;display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start}
-  header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  h1{margin:0;font-weight:900;font-size:clamp(24px,5vw,34px);letter-spacing:.5px;line-height:1}
-  h1 small{display:block;font-size:13px;font-weight:800;color:var(--red);letter-spacing:3px;margin-top:4px}
+  /* Main screen: exactly one viewport tall, never scrolls. The machine scales to fill the space left over. */
+  .app{height:100vh;height:100dvh;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:6px;
+    padding:max(12px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+  header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .head-btns{display:flex;gap:8px;flex:none}
+  h1{margin:0;font-weight:900;font-size:clamp(22px,6vw,30px);letter-spacing:.5px;line-height:1}
+  h1 small{display:block;font-size:12px;font-weight:800;color:var(--red);letter-spacing:1px;margin-top:4px}
+  .rec-btn{position:relative;height:46px;padding:0 14px;border-radius:14px;border:3px solid var(--ink);background:var(--card);font-weight:900;font-size:16px;
+    cursor:pointer;box-shadow:0 4px 0 var(--ink);display:inline-flex;align-items:center;gap:6px;transition:transform .08s,box-shadow .08s}
+  .rec-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+  .rec-btn.bounce{animation:totalBounce .45s cubic-bezier(.3,1.8,.5,1)}
+  .rec-plus{left:50%;right:auto;top:100%;margin-left:-40px;width:80px;text-align:center;white-space:nowrap;font-size:18px}
   .icon-btn{width:46px;height:46px;border-radius:14px;border:3px solid var(--ink);background:var(--card);font-size:20px;cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
   .icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 
   /* ---------- Machine ---------- */
-  .play{display:flex;flex-direction:column;align-items:center;gap:16px}
-  .machine{position:relative;width:320px}
+  .play{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .stage-wrap{flex:1;min-height:0;width:100%;position:relative}
+  .machine{position:absolute;left:50%;top:50%;width:320px;transform:translate(-50%,-50%) scale(var(--k,1))}
+  .controls{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:6px}
+  /* Short landscape screens (phones on their side): controls sit beside the machine instead of under it. */
+  @media (orientation:landscape) and (max-height:520px){
+    .play{flex-direction:row}
+    .stage-wrap{height:100%}
+    .controls{width:45%;justify-content:center;padding-bottom:0}
+    .app{max-width:none}
+    h1 small{display:none}
+  }
   .dome{
     position:relative;z-index:2;width:300px;height:300px;margin:0 auto;border-radius:50%;
     border:5px solid var(--ink);overflow:hidden;
@@ -135,7 +154,7 @@
   @keyframes ring{from{transform:scale(.8);opacity:1}to{transform:scale(1.5);opacity:0}}
 
   /* ---------- Controls under machine ---------- */
-  .hint{min-height:28px;font-weight:800;font-size:17px;text-align:center}
+  .hint{flex:none;height:2.6em;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(14px,4.2vw,17px);line-height:1.25;text-align:center}
   .hint.pop{animation:hintPop .35s cubic-bezier(.3,1.6,.5,1)}
   .hint.warn{color:var(--red)}
   @keyframes hintPop{from{transform:scale(.7);opacity:0}}
@@ -159,7 +178,16 @@
   @keyframes nudge{20%{transform:translateX(-7px) rotate(-4deg)}40%{transform:translateX(6px) rotate(3deg)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
 
   /* ---------- Sidebar ---------- */
-  aside{display:flex;flex-direction:column;gap:16px}
+  /* Records screen: slides up over the game and scrolls on its own if needed. */
+  .records{position:fixed;inset:0;z-index:40;overflow-y:auto;overscroll-behavior:contain;
+    background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.5px,transparent 1.6px);background-size:22px 22px;
+    transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+  .records.open{transform:none}
+  .records-inner{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:16px;
+    padding:max(12px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+  .records-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .records-head h2{margin:0;font-size:26px;font-weight:900}
+  .btn.small{font-size:16px;padding:8px 18px;box-shadow:0 4px 0 var(--ink)}
   .card{background:var(--card);border:3px solid var(--ink);border-radius:20px;padding:16px;box-shadow:0 6px 0 var(--ink)}
   .card h2{margin:0 0 10px;font-size:14px;letter-spacing:1px;color:var(--muted);font-weight:900}
   .total{position:relative;font-size:44px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
@@ -250,10 +278,6 @@
     60%{transform:translate(calc(var(--amp) * -.4),0)}
     80%{transform:translate(calc(var(--amp) * .2),0)}}
 
-  @media (max-width:760px){
-    .app{grid-template-columns:1fr;gap:22px}
-    aside{max-width:420px;width:100%;margin:0 auto}
-  }
   @media (prefers-reduced-motion:reduce){
     .bulb,.rays,.crank.armed::before,.out-cap.ready,.btn.idle-pulse{animation:none!important}
   }
@@ -262,11 +286,15 @@
 <body>
 <div class="app" id="app">
   <header>
-    <h1>ガチャガチャ<small>カプセルトイ・200円〜500円が当たる！</small></h1>
-    <button class="icon-btn" id="muteBtn" aria-label="音を消す">🔊</button>
+    <h1>ガチャガチャ<small>200円〜500円が当たる！</small></h1>
+    <div class="head-btns">
+      <button class="rec-btn" id="recBtn" aria-label="記録と排出率を見る">📊 記録</button>
+      <button class="icon-btn" id="muteBtn" aria-label="音を消す">🔊</button>
+    </div>
   </header>
 
   <section class="play">
+    <div class="stage-wrap" id="stageWrap">
     <div class="machine" id="machine">
       <div class="dome" id="dome"><div class="glass"></div></div>
       <div class="collar"></div>
@@ -288,12 +316,22 @@
       </div>
       <div class="feet"></div>
     </div>
+    </div>
 
-    <div class="hint" id="hint"></div>
-    <button class="btn idle-pulse" id="coinBtn"><span class="coin" id="coinIco">円</span><span id="coinLabel">コインを入れる</span></button>
+    <div class="controls">
+      <div class="hint" id="hint"></div>
+      <button class="btn idle-pulse" id="coinBtn"><span class="coin" id="coinIco">円</span><span id="coinLabel">コインを入れる</span></button>
+    </div>
   </section>
 
-  <aside>
+</div>
+
+<section class="records" id="records" role="dialog" aria-modal="true" aria-labelledby="recTitle" hidden>
+  <div class="records-inner">
+    <div class="records-head">
+      <h2 id="recTitle">📊 記録</h2>
+      <button class="btn small" id="closeRec">とじる</button>
+    </div>
     <div class="card">
       <h2>獲得金額</h2>
       <div class="total" id="total">0円</div>
@@ -308,8 +346,8 @@
       <div class="history" id="history"></div>
       <div style="margin-top:12px"><button class="link" id="resetBtn">記録をリセット</button></div>
     </div>
-  </aside>
-</div>
+  </div>
+</section>
 
 <div class="overlay" id="overlay" hidden>
   <div class="rays"></div>
@@ -878,7 +916,9 @@
     countUp(old, stats.total);
     const plus = document.createElement('div');
     plus.className = 'plus'; plus.textContent = '+' + t.yen + '円'; plus.style.setProperty('--c', t.color);
-    $('total').append(plus); setTimeout(() => plus.remove(), 1150);
+    plus.classList.add('rec-plus');
+    recBtn.append(plus); setTimeout(() => plus.remove(), 1150);
+    restart(recBtn, 'bounce');
     renderStats(false);
     restart($('tier' + tier), 'bounce');
 
@@ -957,7 +997,38 @@
   collectBtn.addEventListener('click', collect);
   slot.addEventListener('click', () => state === 'idle' ? insertCoin() : null);
 
+  // ---- Records screen ----
+  const records = $('records'), recBtn = $('recBtn'), closeRec = $('closeRec');
+  let recTimer = null;
+  function openRecords() {
+    clearTimeout(recTimer);
+    records.hidden = false;
+    void records.offsetWidth;            // commit the hidden→shown change so the slide-up transition runs
+    records.classList.add('open');
+    Sfx.flick(); buzz(8);
+    closeRec.focus({ preventScroll: true });
+  }
+  function closeRecords() {
+    records.classList.remove('open');
+    Sfx.flick(); buzz(8);
+    recTimer = setTimeout(() => { records.hidden = true; }, 360);
+    recBtn.focus({ preventScroll: true });
+  }
+  recBtn.addEventListener('click', openRecords);
+  closeRec.addEventListener('click', closeRecords);
+
+  // ---- Fit the machine to the screen ----
+  const stageWrap = $('stageWrap');
+  function fitMachine() {
+    const k = Math.min(stageWrap.clientWidth / machine.offsetWidth, stageWrap.clientHeight / machine.offsetHeight, 1.6);
+    machine.style.setProperty('--k', Math.max(0.3, k).toFixed(3));
+  }
+  if (window.ResizeObserver) new ResizeObserver(fitMachine).observe(stageWrap);
+  addEventListener('resize', fitMachine);
+  fitMachine();
+
   addEventListener('keydown', e => {
+    if (!records.hidden) { if (e.key === 'Escape') closeRecords(); return; }
     if (e.key !== ' ' && e.key !== 'Enter') return;
     if (e.target.closest('button')) return;
     e.preventDefault();
