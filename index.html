@@ -339,10 +339,11 @@
 (() => {
   // ================= Data =================
   const TIERS = [
-    { yen: 200, name: 'ゲット！',       rank: 'N',   jp: 'ノーマル',           stars: 1, color: '#4aa3ff', weight: 45 },
-    { yen: 300, name: 'レア！',         rank: 'R',   jp: 'レア',               stars: 2, color: '#2fcf7a', weight: 30 },
-    { yen: 400, name: 'スーパーレア！', rank: 'SR',  jp: 'スーパーレア',       stars: 3, color: '#a66bff', weight: 17 },
-    { yen: 500, name: '大当たり！！',   rank: 'SSR', jp: 'スーパースーパーレア', stars: 4, color: '#ffb703', weight: 8 },
+    // lvl = rarity level (0 = N … 3 = SSR); it drives how big the reveal effects and sounds are.
+    { yen: 200, name: 'レア！',         rank: 'R',   jp: 'レア',               lvl: 1, stars: 2, color: '#2fcf7a', weight: 25 },
+    { yen: 300, name: 'ゲット！',       rank: 'N',   jp: 'ノーマル',           lvl: 0, stars: 1, color: '#4aa3ff', weight: 37 },
+    { yen: 400, name: 'スーパーレア！', rank: 'SR',  jp: 'スーパーレア',       lvl: 2, stars: 3, color: '#a66bff', weight: 24 },
+    { yen: 500, name: '大当たり！！',   rank: 'SSR', jp: 'スーパースーパーレア', lvl: 3, stars: 4, color: '#ffb703', weight: 14 },
   ];
   const SHELLS = ['#ff7eb6', '#ffd23f', '#5ec8ff', '#7be495', '#ff9f43', '#b58cff', '#ff6b6b', '#4dd4c6'];
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -803,7 +804,7 @@
   function tapCap() {
     if (state !== 'revealing' || taps >= 3) return;
     taps++;
-    const tier = current.tier;
+    const tier = TIERS[current.tier].lvl;
     Sfx.tap(taps); buzz(18 * taps);
     bigCap.classList.remove('enter', 'wob1', 'wob2', 'wob3');
     void bigCap.offsetWidth;
@@ -821,7 +822,7 @@
     }
   }
   function burstOpen() {
-    const t = TIERS[current.tier], tier = current.tier;
+    const t = TIERS[current.tier], tier = t.lvl;
     const [cx, cy] = capCenter();
     Sfx.pop(); buzz(tier >= 2 ? [60, 40, 120] : 40);
     bigCap.classList.remove('charge', 'wob3');
@@ -873,7 +874,7 @@
     stats.history.unshift(tier); stats.history = stats.history.slice(0, 14);
     save();
 
-    Sfx.collect(tier); buzz(20);
+    Sfx.collect(t.lvl); buzz(20);
     countUp(old, stats.total);
     const plus = document.createElement('div');
     plus.className = 'plus'; plus.textContent = '+' + t.yen + '円'; plus.style.setProperty('--c', t.color);
