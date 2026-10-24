@@ -44,12 +44,12 @@ Space/Enter advances whichever step is current. Haptics use `navigator.vibrate`,
 ## Prizes and odds (`TIERS`)
 | 円 | Rank | Label | Weight |
 |---|---|---|---|
-| 200 | R | レア | 25 |
-| 300 | N | ノーマル | 37 |
-| 400 | SR | スーパーレア | 24 |
-| 500 | SSR | スーパースーパーレア (shout: 大当たり！！) | 14 |
+| 200 | R | レア | 38 |
+| 300 | N | ノーマル | 38 |
+| 400 | SR | スーパーレア | 15 |
+| 500 | SSR | スーパースーパーレア (shout: 大当たり！！) | 9 |
 
-The average payout is about 327円 per play. The user set these odds on 2026-10-18 and asked for the 200/300 labels to be swapped so the most common prize is N. Each tier's `lvl` (0 = N … 3 = SSR) drives the reveal effects and sounds; the array index only drives price order, counts and history.
+The average payout is about 295円 per play. The user set these odds on 2026-10-25 (before that: 25/37/24/14). On 2026-10-18 the user asked for the 200/300 labels to be swapped so the most common prize is N; 200 and 300 are now tied at 38%. Each tier's `lvl` (0 = N … 3 = SSR) drives the reveal effects and sounds; the array index only drives price order, counts and history.
 
 ## Cooldown
 - `COOLDOWN_MS = 60 * 1000`. It starts on collect.
